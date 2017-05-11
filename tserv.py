@@ -82,14 +82,19 @@ class FileListHandler(BaseHandler):
 
 class LoginHandler(BaseHandler):
     def get(self):
-        self.write('<html><body><form action="/login" method="post">'
-                   'Name: <input type="text" name="name">'
-                   '<input type="submit" value="Sign in">'
-                   '</form></body></html>')
+        self.render('auth.html')
 
     def post(self):
-        self.set_secure_cookie("user", self.get_argument("name"))
-        self.redirect("/")
+        # self.set_secure_cookie("user", self.get_argument("name"))
+        login = self.get_argument('login', None)
+        password = self.get_argument('passwd', None)
+        if (self.application.settings['admin_login'] == login
+            and self.application.settings['admin_passwd'] == password):
+            self.set_secure_cookie('user', login)
+            self.redirect('/')
+            return
+        else:
+            self.render('auth.html', response='Wrong login or password')
 
 
 class UploadHandler(BaseHandler):
@@ -114,7 +119,9 @@ def mkapp():
     settings = {
         "cookie_secret": base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes),
         "login_url": "/login",
-        'debug': True
+        'debug': True,
+        'admin_login': 'admin',
+        'admin_passwd': 'admin'
     }
 
     application = tornado.web.Application([
