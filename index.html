@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>simple web server</title>
+</head>
+<body>
+    <h1>{{ pwd }}</h1>
+    <ul>
+        {% for file in files %}
+        <li><a href="pwd/{{ file }}">{{ file }}</a></li>
+        {% end %}
+    </ul>
+    <form action="/upload{{ pwd }}" method="post">
+        <input type="file"><input type="submit" value="Upload">
+    </form>
+    <!--<form>-->
+        <!--Username: <br/>-->
+        <!--<input type="text" name="username"><br/>-->
+        <!--Password: <br/>-->
+        <!--<input type="text" name="password"><br/>-->
+        <!--<input type="submit" value="Submit">-->
+    <!--</form>-->
+</body>
+</html>
