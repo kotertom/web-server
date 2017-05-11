@@ -47,32 +47,38 @@ class FileListHandler(BaseHandler):
         print('uri: ' + self.request.uri)
         print('new path: ' + os.path.join(self.cwd, path))
         try:
+            #is it a dir?
             # os.chdir(path)
             # self.cwd = os.curdir
             files = os.listdir(os.path.join(self.cwd, path))
-            self.render("index.html", pwd = self.request.uri, files = files, lpwd = path)
+            parentdir = os.path.pardir if path else ""
+            print('parentdir: ' + parentdir)
+            self.render("index.html", pwd = self.request.uri, files = files, lpwd = path, parentdir = parentdir)
         except NotADirectoryError as e:
-            filepath = os.path.join(self.cwd, path)
-            filename = os.path.split(self.request.uri)[-1]
-            if not self.request.uri or not os.path.exists(filepath):
-                raise HTTPError(404)
-            self.set_header('Content-Type', 'application/force-download')
-            self.set_header('Content-Disposition', 'attachment; filename=%s' % filename)
-            with open(filepath, "rb") as f:
-                try:
-                    while True:
-                        _buffer = f.read(4096)
-                        if _buffer:
-                            self.write(_buffer)
-                        else:
-                            f.close()
-                            self.finish()
-                            return
-                except:
-                    raise HTTPError(404)
-            raise HTTPError(500)
+            #it's a file
+            self.sendFile(path)
         # self.write("hello")
 
+    def sendFile(self, path):
+        filepath = os.path.join(self.cwd, path)
+        filename = os.path.split(self.request.uri)[-1]
+        if not self.request.uri or not os.path.exists(filepath):
+            raise HTTPError(404)
+        self.set_header('Content-Type', 'application/force-download')
+        self.set_header('Content-Disposition', 'attachment; filename=%s' % filename)
+        with open(filepath, "rb") as f:
+            try:
+                while True:
+                    _buffer = f.read(4096)
+                    if _buffer:
+                        self.write(_buffer)
+                    else:
+                        f.close()
+                        self.finish()
+                        return
+            except:
+                raise HTTPError(404)
+        raise HTTPError(500)
 
 class LoginHandler(BaseHandler):
     def get(self):

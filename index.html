@@ -6,6 +6,9 @@
 </head>
 <body>
     <h1>{{ pwd }}</h1>
+    <form action="{{ parentdir }}" method="get">
+        <input type="submit" value="..">
+    </form>
     <ul>
         {% for file in files %}
         <li><a href="{{ lpwd }}/{{ file }}">{{ file }}</a></li>
