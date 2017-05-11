@@ -6,16 +6,17 @@
 </head>
 <body>
     <h1>{{ pwd }}</h1>
-    <form action="{{ parentdir }}" method="get">
-        <input type="submit" value="..">
-    </form>
+    <!--<form action="{{ parentdir }}" method="get">-->
+        <!--<input type="submit" value="..">-->
+    <!--</form>-->
     <ul>
+        <li><a href="{{ parentdir }}">..</a></li>
         {% for file in files %}
         <li><a href="{{ lpwd }}/{{ file }}">{{ file }}</a></li>
         {% end %}
     </ul>
-    <form action="/upload{{ pwd }}" method="post">
-        <input type="file"><input type="submit" value="Upload">
+    <form action="/upload{{ pwd }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="filearg"><input type="submit" value="Upload">
     </form>
     <!--<form>-->
         <!--Username: <br/>-->

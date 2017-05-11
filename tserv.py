@@ -57,7 +57,7 @@ class FileListHandler(BaseHandler):
         except NotADirectoryError as e:
             #it's a file
             self.sendFile(path)
-        # self.write("hello")
+
 
     def sendFile(self, path):
         filepath = os.path.join(self.cwd, path)
@@ -94,9 +94,20 @@ class LoginHandler(BaseHandler):
 
 class UploadHandler(BaseHandler):
     @tornado.web.authenticated
-    def post(self):
-        pass
-
+    def post(self, path):
+        cwd = os.getcwd()
+        print('upload path: ' + path)
+        # print('file: ' + self.request.files['filearg'][0])
+        for field_name, files in self.request.files.items():
+            print('field_name: ' + field_name)
+            for info in files:
+                filename, content_type = info['filename'], info['content_type']
+                body = info['body']
+                print('filepath: ' + os.path.join(path, filename))
+                with open(os.path.join(path, filename), 'wb') as out:
+                    out.write(bytes(body))
+                    print('file written!')
+        self.redirect('/' + path)
 
 
 def mkapp():
