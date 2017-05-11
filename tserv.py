@@ -22,6 +22,8 @@ import tornado.web
 
 import base64
 import uuid
+
+from tornado.httpclient import HTTPClient, AsyncHTTPClient, HTTPError
 from tornado.options import define, options
 
 
@@ -34,19 +36,41 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class FileListHandler(BaseHandler):
     def initialize(self, path):
-        self.path = path
+        self.cwd = path
         #return super(FileListHandler, self).initialize()
 
     @tornado.web.authenticated
-    def get(self):
+    def get(self, path):
         print('current user: ', self.get_current_user())
-        print('cwd: ' + self.path)
+        print('cwd: ' + self.cwd)
+        print('path: ' + path)
         print('uri: ' + self.request.uri)
+        print('new path: ' + os.path.join(self.cwd, path))
         try:
-            files = os.listdir(self.path + self.request.uri)
-            self.render("index.html", pwd = self.request.uri, files = files)
+            # os.chdir(path)
+            # self.cwd = os.curdir
+            files = os.listdir(os.path.join(self.cwd, path))
+            self.render("index.html", pwd = self.request.uri, files = files, lpwd = path)
         except NotADirectoryError as e:
-            pass
+            filepath = os.path.join(self.cwd, path)
+            filename = os.path.split(self.request.uri)[-1]
+            if not self.request.uri or not os.path.exists(filepath):
+                raise HTTPError(404)
+            self.set_header('Content-Type', 'application/force-download')
+            self.set_header('Content-Disposition', 'attachment; filename=%s' % filename)
+            with open(filepath, "rb") as f:
+                try:
+                    while True:
+                        _buffer = f.read(4096)
+                        if _buffer:
+                            self.write(_buffer)
+                        else:
+                            f.close()
+                            self.finish()
+                            return
+                except:
+                    raise HTTPError(404)
+            raise HTTPError(500)
         # self.write("hello")
 
 
@@ -61,6 +85,14 @@ class LoginHandler(BaseHandler):
         self.set_secure_cookie("user", self.get_argument("name"))
         self.redirect("/")
 
+
+class UploadHandler(BaseHandler):
+    @tornado.web.authenticated
+    def post(self):
+        pass
+
+
+
 def mkapp():
     settings = {
         "cookie_secret": base64.b64encode(uuid.uuid4().bytes + uuid.uuid4().bytes),
@@ -69,9 +101,10 @@ def mkapp():
     }
 
     application = tornado.web.Application([
-        (r"/", FileListHandler, dict(path=os.getcwd())),
         (r'/login', LoginHandler),
-        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "static"})
+        (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": "static"}),
+        (r"/upload/(.*)", UploadHandler),
+        (r"/(.*)", FileListHandler, dict(path=os.getcwd()))
     ], **settings)
 
     return application

@@ -8,7 +8,7 @@
     <h1>{{ pwd }}</h1>
     <ul>
         {% for file in files %}
-        <li><a href="pwd/{{ file }}">{{ file }}</a></li>
+        <li><a href="{{ lpwd }}/{{ file }}">{{ file }}</a></li>
         {% end %}
     </ul>
     <form action="/upload{{ pwd }}" method="post">
